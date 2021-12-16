@@ -1,25 +1,15 @@
 package com.example.exceldemo;
 
-import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -36,19 +26,13 @@ public class ExcelUploadController {
     @RequestMapping("/excel/read")
     public String readExcel(@RequestParam("file") MultipartFile file, Model model)
             throws IOException {
-
-        List<ExcelData> dataList = new ArrayList<>();
-        List<HashMap<String, String>> list = new ArrayList<>();
-        HashMap<String, String> map = null;
-
+        // 파일종류 에러처리
         String extension = FilenameUtils.getExtension(file.getOriginalFilename());
-
         if (!extension.equals("xlsx") && !extension.equals("xls")) {
             throw new IOException("엑셀파일만 업로드 해주세요.");
         }
 
         Workbook workbook = null;
-
         if (extension.equals("xlsx")) {
             workbook = new XSSFWorkbook(file.getInputStream());
         } else if (extension.equals("xls")) {
@@ -56,7 +40,6 @@ public class ExcelUploadController {
         }
 
         Sheet worksheet = workbook.getSheetAt(0);
-
         Row row;
         String[] strDate = new String[5]; // 날짜
         String[] strTime = {"아침", "점심", "저녁"}; // 시간
@@ -65,8 +48,15 @@ public class ExcelUploadController {
         String[] strMenu = new String[10]; // 메뉴
         String[] strDessert = new String[5]; //후식
 
+        List<ExcelData> dataList = new ArrayList<>();
+        ExcelData data = null;
+
         /**
-         * 아침
+         * 아침 2행~9행
+         * 2행 : 날짜
+         * 3행 : 카테고리
+         * 4~8행 : 메뉴
+         * 9행 : 후식
          */
         for (int c = 1; c <= 10; c++) {
             for (int r = 2; r < 10; r++) {
@@ -94,47 +84,35 @@ public class ExcelUploadController {
         List<String> list1 = new ArrayList(Arrays.asList(strMenu));
         List<String> list2 = new ArrayList(Arrays.asList(strDessert));
         list1.addAll(list2);
-
         String[] finalMenu = list1.toArray(new String[0]);
 
         List<String> list3 = new ArrayList(Arrays.asList(strCtgry));
         List<String> list4 = new ArrayList(Arrays.asList(strCtgryDessert));
         list3.addAll(list4);
-
         String[] finalCtgry = list3.toArray(new String[0]);
 
         for (int i = 0; i < 15; i++) {
-            ExcelData data = new ExcelData();
-            map = new HashMap<>();
+            data = new ExcelData();
             if (i > 0 && i < 10) {
                 data.setDate(strDate[i / 2]);
-                map.put("date", strDate[i/2]);
             } else if (i > 0 && i >= 10) {
                 data.setDate(strDate[i - 10]);
-                map.put("date", strDate[i-10]);
             } else {
                 data.setDate(strDate[i]);
-                map.put("date", strDate[i]);
             }
 
             data.setTime(strTime[0]);
-
             data.setCategory(finalCtgry[i]);
             data.setMenu(finalMenu[i]);
-
             dataList.add(data);
-
-            // json으로 만들기
-
-            map.put("time", strTime[0]);
-            map.put("category", finalCtgry[i]);
-            map.put("menu", finalMenu[i]);
-            list.add(map);
         }
 
         /**
-         * 점심
-         */
+         * 점심 10행~18행
+         * 10행 : 카테고리
+         * 11~15행 : 메뉴
+         * 16~17행 : 후식
+         **/
         strCtgry = new String[10]; // 카테고리
         strMenu = new String[10]; // 메뉴
         strDessert = new String[5]; //후식
@@ -166,45 +144,35 @@ public class ExcelUploadController {
         list1 = new ArrayList(Arrays.asList(strMenu));
         list2 = new ArrayList(Arrays.asList(strDessert));
         list1.addAll(list2);
-
         finalMenu = list1.toArray(new String[0]);
 
         list3 = new ArrayList(Arrays.asList(strCtgry));
         list4 = new ArrayList(Arrays.asList(strCtgryDessert));
         list3.addAll(list4);
-
         finalCtgry = list3.toArray(new String[0]);
 
         for (int i = 0; i < 15; i++) {
-            ExcelData data = new ExcelData();
-            map = new HashMap<>();
+            data = new ExcelData();
             if (i > 0 && i < 10) {
                 data.setDate(strDate[i / 2]);
-                map.put("date", strDate[i/2]);
             } else if (i > 0 && i >= 10) {
                 data.setDate(strDate[i - 10]);
-                map.put("date", strDate[i-10]);
             } else {
                 data.setDate(strDate[i]);
-                map.put("date", strDate[i]);
             }
 
             data.setTime(strTime[1]);
-
             data.setCategory(finalCtgry[i]);
             data.setMenu(finalMenu[i]);
 
             dataList.add(data);
-
-            // json으로 만들기
-            map.put("time", strTime[0]);
-            map.put("category", finalCtgry[i]);
-            map.put("menu", finalMenu[i]);
-            list.add(map);
         }
 
         /**
-         * 저녁
+         * 저녁 19행~27행
+         * 19행 : 카테고리
+         * 20~25행 : 메뉴
+         * 26행 : 후식
          */
         strCtgry = new String[10]; // 카테고리
         strMenu = new String[10]; // 메뉴
@@ -237,63 +205,40 @@ public class ExcelUploadController {
         list1 = new ArrayList(Arrays.asList(strMenu));
         list2 = new ArrayList(Arrays.asList(strDessert));
         list1.addAll(list2);
-
         finalMenu = list1.toArray(new String[0]);
 
         list3 = new ArrayList(Arrays.asList(strCtgry));
         list4 = new ArrayList(Arrays.asList(strCtgryDessert));
         list3.addAll(list4);
-
         finalCtgry = list3.toArray(new String[0]);
 
         for (int i = 0; i < 15; i++) {
-            ExcelData data = new ExcelData();
-            map = new HashMap<>();
+            data = new ExcelData();
             if (i > 0 && i < 10) {
                 data.setDate(strDate[i / 2]);
-                map.put("date", strDate[i/2]);
             } else if (i > 0 && i >= 10) {
                 data.setDate(strDate[i - 10]);
-                map.put("date", strDate[i-10]);
             } else {
                 data.setDate(strDate[i]);
-                map.put("date", strDate[i]);
             }
 
             data.setTime(strTime[2]);
-
             data.setCategory(finalCtgry[i]);
             data.setMenu(finalMenu[i]);
-
             dataList.add(data);
-
-            // json으로 만들기
-            map.put("time", strTime[0]);
-            map.put("category", finalCtgry[i]);
-            map.put("menu", finalMenu[i]);
-            list.add(map);
         }
 
-        // 데이터 정제
-        dataList = dataList.stream().filter(excelData -> {
-            System.out.println(excelData.getMenu() + "/");
-            return !(excelData.getMenu().replaceAll("\\n", "").equals("")
-                    || excelData.getMenu() == null
-                    || excelData.getCategory().contains("[가정의 날]")
-                    || excelData.getCategory().contains("[행복DAY]"));
-        }).collect(Collectors.toList());
+        // 불필요한 데이터 삭제
+        dataList = dataList.stream().filter(
+                excelData -> !(excelData.getMenu().replaceAll("\\n", "").equals("")
+                || excelData.getMenu() == null
+                || excelData.getCategory().contains("[가정의 날]")
+                || excelData.getCategory().contains("[행복DAY]"))).collect(Collectors.toList());
 
-        list = list.stream().filter(data -> {
-            System.out.println(data.get("menu") + "/");
-            return !(data.get("menu").toString().replaceAll("\\n", "").equals("")
-                    || data.get("menu") == null
-                    || data.get("category").contains("[가정의 날]")
-                    || data.get("category").contains("[행복DAY]"));
-        }).collect(Collectors.toList());
+        // 데이터 앞뒤 공백 제거
+        dataList.stream().forEach(excelData -> excelData.setMenu(excelData.getMenu().trim()));
 
-        //model.addAttribute("datas", dataList);
-        model.addAttribute("datas", list);
-        System.out.println(list);
+        model.addAttribute("datas", dataList);
         return "excelList";
     }
 }
