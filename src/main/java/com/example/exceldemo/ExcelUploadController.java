@@ -1,22 +1,28 @@
 package com.example.exceldemo;
 
+import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -32,6 +38,8 @@ public class ExcelUploadController {
             throws IOException {
 
         List<ExcelData> dataList = new ArrayList<>();
+        List<HashMap<String, String>> list = new ArrayList<>();
+        HashMap<String, String> map = null;
 
         String extension = FilenameUtils.getExtension(file.getOriginalFilename());
 
@@ -97,13 +105,16 @@ public class ExcelUploadController {
 
         for (int i = 0; i < 15; i++) {
             ExcelData data = new ExcelData();
-
+            map = new HashMap<>();
             if (i > 0 && i < 10) {
                 data.setDate(strDate[i / 2]);
+                map.put("date", strDate[i/2]);
             } else if (i > 0 && i >= 10) {
                 data.setDate(strDate[i - 10]);
+                map.put("date", strDate[i-10]);
             } else {
                 data.setDate(strDate[i]);
+                map.put("date", strDate[i]);
             }
 
             data.setTime(strTime[0]);
@@ -112,6 +123,13 @@ public class ExcelUploadController {
             data.setMenu(finalMenu[i]);
 
             dataList.add(data);
+
+            // json으로 만들기
+
+            map.put("time", strTime[0]);
+            map.put("category", finalCtgry[i]);
+            map.put("menu", finalMenu[i]);
+            list.add(map);
         }
 
         /**
@@ -159,13 +177,16 @@ public class ExcelUploadController {
 
         for (int i = 0; i < 15; i++) {
             ExcelData data = new ExcelData();
-
+            map = new HashMap<>();
             if (i > 0 && i < 10) {
                 data.setDate(strDate[i / 2]);
+                map.put("date", strDate[i/2]);
             } else if (i > 0 && i >= 10) {
                 data.setDate(strDate[i - 10]);
+                map.put("date", strDate[i-10]);
             } else {
                 data.setDate(strDate[i]);
+                map.put("date", strDate[i]);
             }
 
             data.setTime(strTime[1]);
@@ -174,6 +195,12 @@ public class ExcelUploadController {
             data.setMenu(finalMenu[i]);
 
             dataList.add(data);
+
+            // json으로 만들기
+            map.put("time", strTime[0]);
+            map.put("category", finalCtgry[i]);
+            map.put("menu", finalMenu[i]);
+            list.add(map);
         }
 
         /**
@@ -221,13 +248,16 @@ public class ExcelUploadController {
 
         for (int i = 0; i < 15; i++) {
             ExcelData data = new ExcelData();
-
+            map = new HashMap<>();
             if (i > 0 && i < 10) {
                 data.setDate(strDate[i / 2]);
+                map.put("date", strDate[i/2]);
             } else if (i > 0 && i >= 10) {
                 data.setDate(strDate[i - 10]);
+                map.put("date", strDate[i-10]);
             } else {
                 data.setDate(strDate[i]);
+                map.put("date", strDate[i]);
             }
 
             data.setTime(strTime[2]);
@@ -236,6 +266,12 @@ public class ExcelUploadController {
             data.setMenu(finalMenu[i]);
 
             dataList.add(data);
+
+            // json으로 만들기
+            map.put("time", strTime[0]);
+            map.put("category", finalCtgry[i]);
+            map.put("menu", finalMenu[i]);
+            list.add(map);
         }
 
         // 데이터 정제
@@ -247,7 +283,17 @@ public class ExcelUploadController {
                     || excelData.getCategory().contains("[행복DAY]"));
         }).collect(Collectors.toList());
 
-        model.addAttribute("datas", dataList);
+        list = list.stream().filter(data -> {
+            System.out.println(data.get("menu") + "/");
+            return !(data.get("menu").toString().replaceAll("\\n", "").equals("")
+                    || data.get("menu") == null
+                    || data.get("category").contains("[가정의 날]")
+                    || data.get("category").contains("[행복DAY]"));
+        }).collect(Collectors.toList());
+
+        //model.addAttribute("datas", dataList);
+        model.addAttribute("datas", list);
+        System.out.println(list);
         return "excelList";
     }
 }
