@@ -91,21 +91,7 @@ public class ExcelUploadController {
         list3.addAll(list4);
         String[] finalCtgry = list3.toArray(new String[0]);
 
-        for (int i = 0; i < 15; i++) {
-            data = new ExcelData();
-            if (i > 0 && i < 10) {
-                data.setDate(strDate[i / 2]);
-            } else if (i > 0 && i >= 10) {
-                data.setDate(strDate[i - 10]);
-            } else {
-                data.setDate(strDate[i]);
-            }
-
-            data.setTime(strTime[0]);
-            data.setCategory(finalCtgry[i]);
-            data.setMenu(finalMenu[i]);
-            dataList.add(data);
-        }
+        dataList = insertDataList(strDate, dataList, finalMenu, finalCtgry, strTime, 0);
 
         /**
          * 점심 10행~18행
@@ -151,22 +137,7 @@ public class ExcelUploadController {
         list3.addAll(list4);
         finalCtgry = list3.toArray(new String[0]);
 
-        for (int i = 0; i < 15; i++) {
-            data = new ExcelData();
-            if (i > 0 && i < 10) {
-                data.setDate(strDate[i / 2]);
-            } else if (i > 0 && i >= 10) {
-                data.setDate(strDate[i - 10]);
-            } else {
-                data.setDate(strDate[i]);
-            }
-
-            data.setTime(strTime[1]);
-            data.setCategory(finalCtgry[i]);
-            data.setMenu(finalMenu[i]);
-
-            dataList.add(data);
-        }
+        dataList = insertDataList(strDate, dataList, finalMenu, finalCtgry, strTime, 1);
 
         /**
          * 저녁 19행~27행
@@ -212,21 +183,7 @@ public class ExcelUploadController {
         list3.addAll(list4);
         finalCtgry = list3.toArray(new String[0]);
 
-        for (int i = 0; i < 15; i++) {
-            data = new ExcelData();
-            if (i > 0 && i < 10) {
-                data.setDate(strDate[i / 2]);
-            } else if (i > 0 && i >= 10) {
-                data.setDate(strDate[i - 10]);
-            } else {
-                data.setDate(strDate[i]);
-            }
-
-            data.setTime(strTime[2]);
-            data.setCategory(finalCtgry[i]);
-            data.setMenu(finalMenu[i]);
-            dataList.add(data);
-        }
+        dataList = insertDataList(strDate, dataList, finalMenu, finalCtgry, strTime, 2);
 
         // 불필요한 데이터 삭제
         dataList = dataList.stream().filter(
@@ -240,5 +197,25 @@ public class ExcelUploadController {
 
         model.addAttribute("datas", dataList);
         return "excelList";
+    }
+
+    private List<ExcelData> insertDataList(String[] strDate, List<ExcelData> dataList, String[] finalMenu, String[] finalCtgry, String[] strTime, int i2) {
+        ExcelData data;
+        for (int i = 0; i < 15; i++) {
+            data = new ExcelData();
+            if (i > 0 && i < 10) {
+                data.setDate(strDate[i / 2]);
+            } else if (i > 0 && i >= 10) {
+                data.setDate(strDate[i - 10]);
+            } else {
+                data.setDate(strDate[i]);
+            }
+
+            data.setTime(strTime[i2]);
+            data.setCategory(finalCtgry[i]);
+            data.setMenu(finalMenu[i]);
+            dataList.add(data);
+        }
+        return dataList;
     }
 }
